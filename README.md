@@ -10,7 +10,7 @@ Example of vanity addresses: "0x000000...", "0xffffff...", "0xc0ff33...", "0xd3a
 
 ## Configure
 
-- Update your mnemonic phrase in the `main.cpp` file, and chose your starting derived path
+- Update your mnemonic phrase in the `main.cpp` file, and choose your starting derived path
 - The derived path follows this format `Derived Path Format m/44'/60'/{account}'/{change}/{starting_address_index}`
 
 ## Compile and Run

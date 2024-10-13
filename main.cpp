@@ -216,7 +216,7 @@ int main()
     // Derived Path Format ```m/44'/60'/{account}'/{change}/{starting_address_index}```
     uint32_t account = 10;
     uint32_t change = 12;
-    uint32_t starting_address_index = 0;
+    uint32_t starting_address_index = 4294917290;
     std::string prefix_search = "0x0000";
 
     std::vector<unsigned char> seed = mnemonicToSeed(mnemonic, passphrase);
@@ -226,34 +226,51 @@ int main()
     std::cout << "Master Key: " << bytesToHexString(masterKey) << std::endl;
     std::cout << "Chain Code: " << bytesToHexString(chainCode) << std::endl;
 
-    // Derive m/44'/60'/0'/0
+    // Derive m/44'/60'/{account}'
     auto derived = deriveChildKey(masterKey, chainCode, 0x80000000 + 44);
     derived = deriveChildKey(std::get<0>(derived), std::get<1>(derived), 0x80000000 + 60);
     derived = deriveChildKey(std::get<0>(derived), std::get<1>(derived), 0x80000000 + account);
-    derived = deriveChildKey(std::get<0>(derived), std::get<1>(derived), change);
 
     while (true)
     {
-        auto addressKey = deriveChildKey(std::get<0>(derived), std::get<1>(derived), starting_address_index);
+        // Derive m/44'/60'/{account}'/{change}
+        auto changeKey = deriveChildKey(std::get<0>(derived), std::get<1>(derived), change);
 
-        std::string address = generateEthereumAddress(std::get<2>(addressKey));
-
-        if (address.substr(0, prefix_search.length()) == prefix_search)
+        while (true)
         {
-            std::string derivedPath = getDerivedPath(account, change, starting_address_index);
-            std::cout << "Found matching address: " << address << std::endl;
-            std::cout << "Private Key: " << bytesToHexString(std::get<0>(addressKey)) << std::endl;
-            std::cout << "Public Key: " << bytesToHexString(std::get<2>(addressKey)) << std::endl;
-            std::cout << "Derived Path: " << derivedPath << std::endl;
-            std::cout << "at index: " << starting_address_index << std::endl;
-            break;
+            auto addressKey = deriveChildKey(std::get<0>(changeKey), std::get<1>(changeKey), starting_address_index);
+
+            std::string address = generateEthereumAddress(std::get<2>(addressKey));
+
+            if (address.substr(0, prefix_search.length()) == prefix_search)
+            {
+                std::string derivedPath = getDerivedPath(account, change, starting_address_index);
+                std::cout << "Found matching address: " << address << std::endl;
+                std::cout << "Private Key: " << bytesToHexString(std::get<0>(addressKey)) << std::endl;
+                std::cout << "Public Key: " << bytesToHexString(std::get<2>(addressKey)) << std::endl;
+                std::cout << "Derived Path: " << derivedPath << std::endl;
+                std::cout << "at change: " << change << ", index: " << starting_address_index << std::endl;
+                return 0; // Exit the program after finding a match
+            }
+
+            if (starting_address_index == UINT32_MAX)
+            {
+                break; // Break the inner loop to increment change
+            }
+
+            starting_address_index++;
+
+            if (starting_address_index % 1000 == 0)
+            {
+                std::cout << "Checked addresses at change " << change
+                          << ", index " << starting_address_index << std::endl;
+            }
         }
 
-        starting_address_index++;
-        if (starting_address_index % 1000 == 0)
-        {
-            std::cout << "Checked addresses at index " << starting_address_index << std::endl;
-        }
+        change++;
+        starting_address_index = 0;
+        std::cout << "Reached max index. Incrementing change to " << change
+                  << " and resetting index to 0" << std::endl;
     }
 
     return 0;

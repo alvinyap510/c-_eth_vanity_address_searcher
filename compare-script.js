@@ -43,7 +43,7 @@ function generateEthereumKeys(mnemonic) {
 
 // Example usage
 const mnemonic =
-  "loan candy culture mixture olympic original order trial earn ask anxiety when vintage garlic alert once fee vacuum crouch dose cable yard rude sail";
+  "able route prevent blood few lumber company convince discover slight menu good child gadget brother truck farm buyer paddle extend object click cradle hero";
 try {
   const keys = generateEthereumKeys(mnemonic);
   console.log("1. Seed:", keys.seed);
